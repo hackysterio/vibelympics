@@ -66,11 +66,14 @@ The app will be available at http://localhost:8080
 # Clone the repository
 git clone https://github.com/hackysterio/vibelympics
 cd vibelympics/round_1
+cd SignSpeakApp
 
 # Build and run
 docker build -t signspeak .
 docker run -p 8080:8080 signspeak
 ```
+
+The app will be available at http://localhost:8080
 
 ## Technical Notes
 
