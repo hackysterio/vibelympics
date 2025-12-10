@@ -1,0 +1,40 @@
+{
+  "package": "express",
+  "version": "4.18.2",
+  "risk_score": 16,
+  "severity": "Low",
+  "risk_breakdown": {
+    "publish_activity": 10,
+    "maintainer": 0,
+    "dependency": 30,
+    "typosquat": 0,
+    "tarball_scan": 0
+  },
+  "flags": [
+    "Moderate dependency count: 30"
+  ],
+  "evidence": {
+    "maintainers": [
+      {"name": "dougwilson", "email": "doug@somethingdoug.com"},
+      {"name": "wesleytodd", "email": "wes@wesleytodd.com"},
+      {"name": "blakeembrey", "email": "hello@blakeembrey.com"}
+    ],
+    "latest_release_date": "2024-10-01T00:00:00",
+    "tarball_findings": [],
+    "publish_timeline": [
+      {"version": "4.18.2", "date": "2024-10-01T00:00:00.000Z"},
+      {"version": "4.18.1", "date": "2024-04-01T00:00:00.000Z"},
+      {"version": "4.18.0", "date": "2023-06-01T00:00:00.000Z"}
+    ],
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/expressjs/express.git"
+    },
+    "dependencies_count": 30,
+    "typosquat_matches": [],
+    "description": "Fast, unopinionated, minimalist web framework for node.",
+    "license": "MIT",
+    "homepage": "http://expressjs.com/"
+  },
+  "timestamp": "2024-12-10T12:00:00Z"
+}

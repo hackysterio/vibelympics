@@ -1,0 +1,39 @@
+{
+  "package": "react",
+  "version": "18.2.0",
+  "risk_score": 8,
+  "severity": "Low",
+  "risk_breakdown": {
+    "publish_activity": 10,
+    "maintainer": 0,
+    "dependency": 0,
+    "typosquat": 0,
+    "tarball_scan": 0
+  },
+  "flags": [],
+  "evidence": {
+    "maintainers": [
+      {"name": "acdlite", "email": "acdlite@fb.com"},
+      {"name": "gaearon", "email": "gaearon@fb.com"},
+      {"name": "sophiebits", "email": "sophiebits@fb.com"},
+      {"name": "sebmarkbage", "email": "smarkbag@fb.com"}
+    ],
+    "latest_release_date": "2024-06-01T00:00:00",
+    "tarball_findings": [],
+    "publish_timeline": [
+      {"version": "18.2.0", "date": "2024-06-01T00:00:00.000Z"},
+      {"version": "18.1.0", "date": "2024-01-01T00:00:00.000Z"},
+      {"version": "18.0.0", "date": "2023-06-01T00:00:00.000Z"}
+    ],
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/facebook/react.git"
+    },
+    "dependencies_count": 2,
+    "typosquat_matches": [],
+    "description": "React is a JavaScript library for building user interfaces.",
+    "license": "MIT",
+    "homepage": "https://reactjs.org/"
+  },
+  "timestamp": "2024-12-10T12:00:00Z"
+}

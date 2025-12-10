@@ -1,0 +1,52 @@
+You are an automated developer. Create a complete, runnable web application called **PkgAudit** — a Package Ecosystem Auditor targeting **npm**. Deliver a full repo that can be run locally and in Docker. Follow these exact instructions.
+
+1) Tech stack and packaging
+- Language: Python 3.11+
+- Framework: FastAPI + uvicorn
+- HTTP client: httpx (async)
+- Templates: Jinja2 for HTML
+- Testing: pytest
+- Packaging: pip + requirements.txt (no C extensions)
+- Container: Dockerfile that exposes port 8080 and includes a healthcheck at /health
+
+2) What the app must do
+- Provide a web UI (GET `/`) with a search box for a package name and a submit button.
+- Provide JSON API endpoints:
+  - `GET /api/audit?pkg=<package>` — returns the audit JSON.
+  - `POST /audit` — form submission from UI; returns an HTML report page.
+  - `GET /api/report/<package>.json` — return cached report if present.
+  - `GET /health` — returns 200 OK.
+- For a given package name, query `https://registry.npmjs.org/<package>` to gather metadata, maintainers, versions, and the latest version's tarball URL.
+
+3) Core audit capabilities (must implement exactly)
+- Registry parsing: extract versions/time, latest version, maintainers, repository, dist.tarball, dependencies.
+- Publish activity heuristics:
+  - count releases last 7d and 30d, detect dormant (no releases >365 days) then sudden release.
+- Maintainer heuristics:
+  - count maintainers, detect recently added maintainers (<30 days), flag free-email domains (gmail, yahoo, hotmail), flag missing GitHub repo.
+- Dependency heuristics:
+  - count dependencies, flag >50, >20, >5 thresholds; add penalty per deprecated dependency and per dependency missing repo.
+- Typosquatting:
+  - pure-Python Levenshtein function; compare package name to a curated list of popular packages (include at least 50 names). Use min distance thresholds (1 -> high suspicion, 2 -> medium).
+- Tarball static scan (safe — NO code execution):
+  - download tarball, extract to temp dir, parse package.json scripts for `postinstall`/`preinstall`.
+  - scan `.js`/`.ts` files for tokens: `eval(`, `Function(`, `child_process`, `curl `, `wget `, `nc `, network APIs.
+  - detect long high-entropy strings (entropy > 4.0 over length >100) and long hex/base64 blobs; flag file path and snippet.
+- Risk score: implement exact weighted formula below and return breakdown.
+
+4) Risk scoring algorithm (exact)
+- Subscores 0–100:
+  - publish_activity (weight 0.25)
+    - releases_last_7_days >=5 → 90; >=2 → 65; dormant then latest_age<=7d → 80; else 10
+  - maintainer (weight 0.20)
+    - base 0; if maintainers==1 add 70; if maintainer added <30d add 20; missing GitHub add 20; free-email add 10; cap 100
+  - dependency (weight 0.20)
+    - num_deps>50 →90; >20 →60; >5 →30; add 15 per deprecated dep (cap 100); add 10 per dep missing repo (cap 100)
+  - typosquat (weight 0.15)
+    - levenshtein_min==1 & low popularity →90; ==1 & medium →60; ==2 →30; else 0
+  - tarball_scan (weight 0.20)
+    - postinstall → +60; network commands → +50; eval/Function → +40; high-entropy blob → +50; combine and cap 100
+- Final risk: `round(publish*0.25 + maintainer*0.20 + dependency*0.20 + typosquat*0.15 + tarball*0.20)`
+- Severity: 0–30 Low, 31–60 Medium, 61–100 High
+
+5) Output JSON schema (must match)

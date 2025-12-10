@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Report: {{ report.package }} - PkgAudit</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <a href="/" class="logo-link">
+                <div class="logo">
+                    <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
+                        <rect width="48" height="48" rx="8" fill="#1a1a2e"/>
+                        <path d="M14 24L20 30L34 16" stroke="#00ff88" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <h1>PkgAudit</h1>
+                </div>
+            </a>
+            <a href="/" class="back-link">New Audit</a>
+        </header>
+
+        <main class="report-main">
+            <section class="package-header">
+                <div class="package-info">
+                    <h2>{{ report.package }}</h2>
+                    <span class="version">v{{ report.version }}</span>
+                    {% if report.evidence.description %}
+                    <p class="description">{{ report.evidence.description }}</p>
+                    {% endif %}
+                </div>
+                <div class="meta-info">
+                    <span class="timestamp">Audited: {{ report.timestamp[:19].replace('T', ' ') }} UTC</span>
+                    {% if report.evidence.license %}
+                    <span class="license">License: {{ report.evidence.license }}</span>
+                    {% endif %}
+                </div>
+            </section>
+
+            <section class="risk-overview">
+                <div class="risk-score-container">
+                    <div class="risk-gauge">
+                        <svg viewBox="0 0 200 120" class="gauge-svg">
+                            <defs>
+                                <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#00ff88"/>
+                                    <stop offset="50%" style="stop-color:#ffe66d"/>
+                                    <stop offset="100%" style="stop-color:#ff6b6b"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#2a2a3e" stroke-width="16" stroke-linecap="round"/>
+                            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGradient)" stroke-width="16" stroke-linecap="round"
+                                  stroke-dasharray="{{ (report.risk_score / 100) * 251.2 }} 251.2"/>
+                            <text x="100" y="85" text-anchor="middle" class="score-text">{{ report.risk_score }}</text>
+                            <text x="100" y="105" text-anchor="middle" class="score-label">Risk Score</text>
+                        </svg>
+                    </div>
+                    <div class="severity-badge severity-{{ report.severity|lower }}">
+                        {{ report.severity }} Risk
+                    </div>
+                </div>
+
+                <div class="risk-breakdown">
+                    <h3>Risk Breakdown</h3>
+                    <div class="breakdown-bars">
+                        <div class="breakdown-item">
+                            <div class="breakdown-label">
+                                <span>Publish Activity</span>
+                                <span>{{ report.risk_breakdown.publish_activity }}/100</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ report.risk_breakdown.publish_activity }}%; background: {{ '#ff6b6b' if report.risk_breakdown.publish_activity > 60 else '#ffe66d' if report.risk_breakdown.publish_activity > 30 else '#00ff88' }};"></div>
+                            </div>
+                        </div>
+                        <div class="breakdown-item">
+                            <div class="breakdown-label">
+                                <span>Maintainer</span>
+                                <span>{{ report.risk_breakdown.maintainer }}/100</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ report.risk_breakdown.maintainer }}%; background: {{ '#ff6b6b' if report.risk_breakdown.maintainer > 60 else '#ffe66d' if report.risk_breakdown.maintainer > 30 else '#00ff88' }};"></div>
+                            </div>
+                        </div>
+                        <div class="breakdown-item">
+                            <div class="breakdown-label">
+                                <span>Dependencies</span>
+                                <span>{{ report.risk_breakdown.dependency }}/100</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ report.risk_breakdown.dependency }}%; background: {{ '#ff6b6b' if report.risk_breakdown.dependency > 60 else '#ffe66d' if report.risk_breakdown.dependency > 30 else '#00ff88' }};"></div>
+                            </div>
+                        </div>
+                        <div class="breakdown-item">
+                            <div class="breakdown-label">
+                                <span>Typosquatting</span>
+                                <span>{{ report.risk_breakdown.typosquat }}/100</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ report.risk_breakdown.typosquat }}%; background: {{ '#ff6b6b' if report.risk_breakdown.typosquat > 60 else '#ffe66d' if report.risk_breakdown.typosquat > 30 else '#00ff88' }};"></div>
+                            </div>
+                        </div>
+                        <div class="breakdown-item">
+                            <div class="breakdown-label">
+                                <span>Tarball Scan</span>
+                                <span>{{ report.risk_breakdown.tarball_scan }}/100</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ report.risk_breakdown.tarball_scan }}%; background: {{ '#ff6b6b' if report.risk_breakdown.tarball_scan > 60 else '#ffe66d' if report.risk_breakdown.tarball_scan > 30 else '#00ff88' }};"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {% if report.flags %}
+            <section class="findings-section">
+                <h3>Security Flags</h3>
+                <div class="flags-list">
+                    {% for flag in report.flags %}
+                    <div class="flag-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        <span>{{ flag }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            <section class="evidence-section">
+                <h3>Evidence & Details</h3>
+                
+                <div class="evidence-cards">
+                    <div class="evidence-card">
+                        <h4>Maintainers ({{ report.evidence.maintainers|length }})</h4>
+                        <div class="maintainer-list">
+                            {% for maintainer in report.evidence.maintainers %}
+                            <div class="maintainer-item">
+                                <span class="maintainer-name">{{ maintainer.name }}</span>
+                                {% if maintainer.email %}
+                                <span class="maintainer-email">{{ maintainer.email }}</span>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="evidence-card">
+                        <h4>Repository</h4>
+                        {% if report.evidence.repository %}
+                        <p class="repo-url">
+                            {% if report.evidence.repository.url is defined %}
+                            {{ report.evidence.repository.url }}
+                            {% else %}
+                            {{ report.evidence.repository }}
+                            {% endif %}
+                        </p>
+                        {% else %}
+                        <p class="warning-text">No repository linked</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="evidence-card">
+                        <h4>Dependencies</h4>
+                        <p>Total: <strong>{{ report.evidence.dependencies_count }}</strong> dependencies</p>
+                    </div>
+
+                    {% if report.evidence.typosquat_matches %}
+                    <div class="evidence-card warning-card">
+                        <h4>Similar Package Names</h4>
+                        <div class="typosquat-list">
+                            {% for match in report.evidence.typosquat_matches %}
+                            <div class="typosquat-item">
+                                <span class="popular-pkg">{{ match.popular_package }}</span>
+                                <span class="distance">Distance: {{ match.distance }}</span>
+                                <span class="suspicion suspicion-{{ match.suspicion }}">{{ match.suspicion }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if report.evidence.tarball_findings %}
+                    <div class="evidence-card warning-card">
+                        <h4>Tarball Scan Findings</h4>
+                        <ul class="tarball-findings">
+                            {% for finding in report.evidence.tarball_findings %}
+                            <li>{{ finding }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            {% if report.evidence.publish_timeline %}
+            <section class="timeline-section">
+                <h3>Recent Releases</h3>
+                <div class="sparkline-container">
+                    <svg class="sparkline" viewBox="0 0 400 60" preserveAspectRatio="none">
+                        {% set timeline = report.evidence.publish_timeline %}
+                        {% set count = timeline|length %}
+                        {% if count > 1 %}
+                        <polyline
+                            fill="none"
+                            stroke="#00ff88"
+                            stroke-width="2"
+                            points="{% for i in range(count) %}{{ (i / (count - 1)) * 380 + 10 }},{{ 50 - (i / count) * 40 }}{% if not loop.last %} {% endif %}{% endfor %}"
+                        />
+                        {% for i in range(count) %}
+                        <circle cx="{{ (i / (count - 1)) * 380 + 10 }}" cy="{{ 50 - (i / count) * 40 }}" r="3" fill="#00ff88"/>
+                        {% endfor %}
+                        {% endif %}
+                    </svg>
+                </div>
+                <div class="timeline-list">
+                    {% for release in report.evidence.publish_timeline[:5] %}
+                    <div class="timeline-item">
+                        <span class="version-tag">v{{ release.version }}</span>
+                        <span class="release-date">{{ release.date[:10] }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            <section class="download-section">
+                <button id="downloadBtn" class="download-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Download JSON Report
+                </button>
+            </section>
+        </main>
+
+        <footer>
+            <p>PkgAudit - Software Supply Chain Security Tool</p>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            const report = {{ report_json|safe }};
+            const blob = new Blob([JSON.stringify(report, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = report.package + '_audit_report.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>

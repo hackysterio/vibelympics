@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PkgAudit - npm Package Security Auditor</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="48" height="48" rx="8" fill="#1a1a2e"/>
+                    <path d="M14 24L20 30L34 16" stroke="#00ff88" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="24" cy="24" r="16" stroke="#00ff88" stroke-width="2" opacity="0.5"/>
+                </svg>
+                <h1>PkgAudit</h1>
+            </div>
+            <p class="tagline">npm Package Ecosystem Security Auditor</p>
+        </header>
+
+        <main>
+            <section class="hero">
+                <h2>Analyze npm packages for supply chain risks</h2>
+                <p>PkgAudit performs comprehensive security analysis including typosquatting detection, 
+                   maintainer verification, dependency analysis, and static code scanning to identify 
+                   potential security threats before they compromise your project.</p>
+            </section>
+
+            <section class="search-section">
+                <form action="/audit" method="post" class="search-form">
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            name="package" 
+                            placeholder="Enter npm package name (e.g., express, lodash, axios)" 
+                            required
+                            autocomplete="off"
+                            spellcheck="false"
+                        >
+                        <button type="submit">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="M21 21l-4.35-4.35"/>
+                            </svg>
+                            Audit Package
+                        </button>
+                    </div>
+                </form>
+
+                {% if error %}
+                <div class="error-message">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v4M12 16h.01"/>
+                    </svg>
+                    {{ error }}
+                </div>
+                {% endif %}
+            </section>
+
+            <section class="features">
+                <h3>Security Analysis Features</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                <path d="M2 17l10 5 10-5"/>
+                                <path d="M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <h4>Typosquatting Detection</h4>
+                        <p>Compares package names against 80+ popular packages using Levenshtein distance to detect potential name confusion attacks.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4ecdc4" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                        </div>
+                        <h4>Maintainer Analysis</h4>
+                        <p>Evaluates maintainer count, email domains, GitHub repository presence, and recent maintainer changes.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ffe66d" stroke-width="2">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                            </svg>
+                        </div>
+                        <h4>Publish Activity</h4>
+                        <p>Detects suspicious release patterns like dormant packages with sudden activity or unusually high publish rates.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <path d="M7 7h10M7 12h10M7 17h6"/>
+                            </svg>
+                        </div>
+                        <h4>Static Code Scan</h4>
+                        <p>Analyzes tarball for postinstall scripts, eval/Function calls, network commands, and obfuscated code.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="api-section">
+                <h3>API Endpoints</h3>
+                <div class="api-list">
+                    <div class="api-item">
+                        <code>GET /api/audit?pkg=&lt;package&gt;</code>
+                        <span>Returns JSON audit report</span>
+                    </div>
+                    <div class="api-item">
+                        <code>GET /api/report/&lt;package&gt;.json</code>
+                        <span>Returns cached report if available</span>
+                    </div>
+                    <div class="api-item">
+                        <code>GET /health</code>
+                        <span>Health check endpoint</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>PkgAudit - Software Supply Chain Security Tool</p>
+            <p class="disclaimer">This tool performs static analysis only. No package code is executed.</p>
+        </footer>
+    </div>
+</body>
+</html>

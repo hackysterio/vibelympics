@@ -1,0 +1,113 @@
+You are an automated developer. Create a complete, runnable web application called **PkgAudit** — a Package Ecosystem Auditor targeting **npm**. Deliver a full repo that can be run locally and in Docker. Follow these exact instructions.
+
+1) Tech stack and packaging
+- Language: Python 3.11+
+- Framework: FastAPI + uvicorn
+- HTTP client: httpx (async)
+- Templates: Jinja2 for HTML
+- Testing: pytest
+- Packaging: pip + requirements.txt (no C extensions)
+- Container: Dockerfile that exposes port 8080 and includes a healthcheck at /health
+
+2) What the app must do
+- Provide a web UI (GET `/`) with a search box for a package name and a submit button.
+- Provide JSON API endpoints:
+  - `GET /api/audit?pkg=<package>` — returns the audit JSON.
+  - `POST /audit` — form submission from UI; returns an HTML report page.
+  - `GET /api/report/<package>.json` — return cached report if present.
+  - `GET /health` — returns 200 OK.
+- For a given package name, query `https://registry.npmjs.org/<package>` to gather metadata, maintainers, versions, and the latest version's tarball URL.
+
+3) Core audit capabilities (must implement exactly)
+- Registry parsing: extract versions/time, latest version, maintainers, repository, dist.tarball, dependencies.
+- Publish activity heuristics:
+  - count releases last 7d and 30d, detect dormant (no releases >365 days) then sudden release.
+- Maintainer heuristics:
+  - count maintainers, detect recently added maintainers (<30 days), flag free-email domains (gmail, yahoo, hotmail), flag missing GitHub repo.
+- Dependency heuristics:
+  - count dependencies, flag >50, >20, >5 thresholds; add penalty per deprecated dependency and per dependency missing repo.
+- Typosquatting:
+  - pure-Python Levenshtein function; compare package name to a curated list of popular packages (include at least 50 names). Use min distance thresholds (1 -> high suspicion, 2 -> medium).
+- Tarball static scan (safe — NO code execution):
+  - download tarball, extract to temp dir, parse package.json scripts for `postinstall`/`preinstall`.
+  - scan `.js`/`.ts` files for tokens: `eval(`, `Function(`, `child_process`, `curl `, `wget `, `nc `, network APIs.
+  - detect long high-entropy strings (entropy > 4.0 over length >100) and long hex/base64 blobs; flag file path and snippet.
+- Risk score: implement exact weighted formula below and return breakdown.
+
+4) Risk scoring algorithm (exact)
+- Subscores 0–100:
+  - publish_activity (weight 0.25)
+    - releases_last_7_days >=5 → 90; >=2 → 65; dormant then latest_age<=7d → 80; else 10
+  - maintainer (weight 0.20)
+    - base 0; if maintainers==1 add 70; if maintainer added <30d add 20; missing GitHub add 20; free-email add 10; cap 100
+  - dependency (weight 0.20)
+    - num_deps>50 →90; >20 →60; >5 →30; add 15 per deprecated dep (cap 100); add 10 per dep missing repo (cap 100)
+  - typosquat (weight 0.15)
+    - levenshtein_min==1 & low popularity →90; ==1 & medium →60; ==2 →30; else 0
+  - tarball_scan (weight 0.20)
+    - postinstall → +60; network commands → +50; eval/Function → +40; high-entropy blob → +50; combine and cap 100
+- Final risk: `round(publish*0.25 + maintainer*0.20 + dependency*0.20 + typosquat*0.15 + tarball*0.20)`
+- Severity: 0–30 Low, 31–60 Medium, 61–100 High
+
+5) Output JSON schema (must match)
+{
+"package": "<name>",
+"version": "<latest>",
+"risk_score": <int>,
+"severity": "<Low|Medium|High>",
+"risk_breakdown": {
+"publish_activity": <int>,
+"maintainer": <int>,
+"dependency": <int>,
+"typosquat": <int>,
+"tarball_scan": <int>
+},
+"flags": [ "<short human flags>" ],
+"evidence": { "maintainers": [...], "latest_release_date": "<ISO>", "tarball_findings": [...], "publish_timeline": [...] },
+"timestamp": "<ISO>"
+}
+
+
+
+6) UI & UX requirements
+- `index.html`: search bar, short explanation, submit button.
+- `report.html`: top metadata card, a visual risk meter (color-coded progress bar or SVG gauge), per-section cards that show flags and raw evidence, and a "Download JSON report" button.
+- Provide a small inline sparkline SVG of releases over time.
+- Use minimal CSS (one file); no Tailwind build step required.
+
+7) Repo layout and required files
+- `src/main.py` (FastAPI app)
+- `src/audit.py` (core scoring & helpers: levenshtein, entropy)
+- `src/registry.py` (npm API wrapper & caching)
+- `src/tarball_scanner.py`
+- `src/templates/index.html`, `src/templates/report.html`
+- `src/static/styles.css`
+- `src/cli.py` (simple CLI: `python src/cli.py express` prints JSON)
+- `requirements.txt`
+- `Dockerfile`
+- `Makefile` with `build`, `run`, `test`, `docker` targets
+- `tests/` with unit tests for levenshtein, entropy, and one integration test mocking registry responses
+- `README.md` with run instructions, scoring explanation, demo screenshots placeholders, and Docker commands
+
+8) Testing & CI
+- Include pytest tests.
+- Provide a GitHub Actions `ci.yml` that installs dependencies, runs pytest, and builds the Docker image.
+
+9) Dockerfile & run
+- Dockerfile must use python:3.11-slim, install requirements, copy src, expose 8080, and run `uvicorn main:app --host 0.0.0.0 --port 8080`.
+- Healthcheck: HTTP GET /health (expect 200).
+- Must include example run commands in README:
+  - `docker build -t pkgaudit .`
+  - `docker run --rm -p 8080:8080 pkgaudit`
+
+10) Behavior on restricted environments
+- If the agent cannot create files, return **every file** as plain text blocks with a header comment of the path (e.g., `### FILE: src/main.py`) and the full file contents, so a human can recreate the repo.
+
+11) Extra polish (optional but strongly recommended)
+- Implement lightweight SQLite cache for API responses (TTL 24h).
+- Provide `sample_reports/` with pre-generated JSON for `express`, `react`, and `left-pad`.
+- Add a README section "How risk is computed" that copies the scoring algorithm verbatim.
+
+Finish by returning either: (A) a ZIP-like repo tree and files written to disk in the runtime, or (B) the full contents of every file in the repository as text blocks. Do not run or execute any downloaded package code. Prioritize correctness and tests over fancy styling.
+
+Begin now and return the repo files.
